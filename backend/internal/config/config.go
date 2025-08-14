@@ -12,61 +12,59 @@ import (
 )
 
 // We will create all the structs and read env variables from .env .
-// .we will reuse it at the runtime from here ..withour reloading it
+// .we will reuse it at the runtime from here without reloading it
 
 // what are struct tags ? how koanf handles
 
 type Config struct {
-	Primary			Primary				`koanf:"primary" validate:"required"`
-	Server			ServerConfig		`koanf:"server" validate:"required"`
-	Database		DatabaseConfig		`koanf:"database" validate:"required"`
-	Auth			AuthConfig			`koanf:"auth" validate:"required"`
-	Redis			RedisConfig			`koanf:"redis" validate:"required"`
-	Observability	*ObservabilityConfig	`koanf:"observability"`
-
+	Primary       Primary              `koanf:"primary" validate:"required"`
+	Server        ServerConfig         `koanf:"server" validate:"required"`
+	Database      DatabaseConfig       `koanf:"database" validate:"required"`
+	Auth          AuthConfig           `koanf:"auth" validate:"required"`
+	Redis         RedisConfig          `koanf:"redis" validate:"required"`
+	Observability *ObservabilityConfig `koanf:"observability"`
 }
 
 type Primary struct {
 	Env string `koanf:"env" validate:"required"`
 }
 
-type ServerConfig struct{
-	Port              	string 		`koanf:"port" validate:"required"`
-	ReadTimeout       	int     	`koanf:"read_timeout" validate:"required"`
-	WriteTimeout	  	int	  		`koanf:"write_timeout" validate:"required"`
-	IdleTimeout			int			`koanf:"idle_timeout" validate:"required"`
-	CORSAlloedOrigins	[]string	`koanf:"cors_allowed_origins" validate:"required"`
+type ServerConfig struct {
+	Port               string   `koanf:"port" validate:"required"`
+	ReadTimeout        int      `koanf:"read_timeout" validate:"required"`
+	WriteTimeout       int      `koanf:"write_timeout" validate:"required"`
+	IdleTimeout        int      `koanf:"idle_timeout" validate:"required"`
+	CORSAllowedOrigins []string `koanf:"cors_allowed_origins" validate:"required"`
 }
 type DatabaseConfig struct {
-	Host			string		`koanf:"host" validate:"required"`
-	Port			int			`koanf:"port" validate:"required"`
-	User			string		`koanf:"user" validate:"required"`
-	Password		string		`koanf:"password" validate:"required"`
-	Name			string		`koanf:"name" validate:"required"`
-	SSLMode			string		`koanf:"ssl_mode" validate:"required"`
-	MaxOpenConns	int			`koanf:"max_open_conns" validate:"required"`
-	ConnMaxLifetime	int			`koanf:"conn_max_lifetime" validate:"required"`
-	ConnMaxIdleTime	int 		`koanf:"conn_max_idle_time" validate:"required"`
+	Host            string `koanf:"host" validate:"required"`
+	Port            int    `koanf:"port" validate:"required"`
+	User            string `koanf:"user" validate:"required"`
+	Password        string `koanf:"password" validate:"required"`
+	Name            string `koanf:"name" validate:"required"`
+	SSLMode         string `koanf:"ssl_mode" validate:"required"`
+	MaxOpenConns    int    `koanf:"max_open_conns" validate:"required"`
+	ConnMaxLifetime int    `koanf:"conn_max_lifetime" validate:"required"`
+	ConnMaxIdleTime int    `koanf:"conn_max_idle_time" validate:"required"`
 }
 
 type RedisConfig struct {
-	Address			string		`koanf:"address" validate:"required"`
+	Address string `koanf:"address" validate:"required"`
 }
 
 type AuthConfig struct {
-	SecretKey		string			`koanf:"secret_key" validate:"required"`
+	SecretKey string `koanf:"secret_key" validate:"required"`
 }
 
-
-//   A function to load all the env variables into the the Config struct 
+//   A function to load all the env variables into the the Config struct
 
 func LoadConfig() (*Config, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
 	k := koanf.New(".")
 
-	err := k.Load(env.Provider("BOILERPLATE_", ".", func (s string) string  {
-		return  strings.ToLower(strings.TrimPrefix(s, "BOILERPLATE_"))
+	err := k.Load(env.Provider("BOILERPLATE_", ".", func(s string) string {
+		return strings.ToLower(strings.TrimPrefix(s, "BOILERPLATE_"))
 	}), nil)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Could not load initial env variables")
@@ -74,16 +72,16 @@ func LoadConfig() (*Config, error) {
 
 	mainConfig := &Config{}
 
-	// loading all the configs into main config 
+	// loading all the configs into main config
 	err = k.Unmarshal("", mainConfig)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("could not unmarshal main config")
 	}
 
-	validate  := validator.New()
+	validate := validator.New()
 
 	err = validate.Struct(mainConfig)
-	if err!=nil {
+	if err != nil {
 		logger.Fatal().Err(err).Msg("config validation failed")
 	}
 
@@ -99,5 +97,3 @@ func LoadConfig() (*Config, error) {
 
 	return mainConfig, nil
 }
-
-
